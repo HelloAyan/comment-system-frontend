@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/hooks';
+import toast from 'react-hot-toast';
 
 const Login = () => {
     const navigate = useNavigate();
-    const { login, user, loading } = useAuth();
+    const { login, user, loading, error } = useAuth();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errors, setErrors] = useState({});
 
-    const handleSubmit = (e) => {
+    const validateForm = () => {
+        const errs = {};
+        if (!email) errs.email = 'Email is required';
+        if (!password) errs.password = 'Password is required';
+        setErrors(errs);
+        return Object.keys(errs).length === 0;
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        login(email, password);
+        if (!validateForm()) return;
+
+        await login(email, password); // login uses toast inside hook on server response
     };
 
     useEffect(() => {
@@ -33,8 +46,10 @@ const Login = () => {
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             placeholder="you@example.com"
-                            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                            className={`w-full px-4 py-2 rounded-xl border ${errors.email ? 'border-red-500' : 'border-gray-300'
+                                } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                         />
+                        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                     </div>
 
                     <div>
@@ -44,8 +59,10 @@ const Login = () => {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             placeholder="••••••••"
-                            className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                            className={`w-full px-4 py-2 rounded-xl border ${errors.password ? 'border-red-500' : 'border-gray-300'
+                                } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                         />
+                        {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                     </div>
 
                     <button
